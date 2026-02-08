@@ -1,7 +1,87 @@
-// HTML Extended - Main Library
-// v1.1 - Added Hero and Theme Features
+// HTML Extended - Firebase Library
+// v1.6 - User-Customizable Firebase Config
 
-// 1. Hero Section Component
+// --- UNIVERSAL CSS UTILITY ---
+function applyUniversalStyles(component) {
+    const wrapper = component.querySelector('.hx-wrapper');
+    if (!wrapper) return;
+
+    if (component.hasAttribute('align')) {
+        const alignment = component.getAttribute('align');
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = alignment === 'center' ? 'center' : 
+                                       alignment === 'right' ? 'flex-end' : 'flex-start';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.width = '100%';
+    }
+    
+    if (component.hasAttribute('color')) {
+        wrapper.style.color = component.getAttribute('color');
+    }
+}
+
+// 1. Firebase App Config Component (NEW)
+// This tag holds the config and initializes Firebase
+class FirebaseApp extends HTMLElement {
+    connectedCallback() {
+        this.style.display = 'none'; // Keep config hidden
+        const config = {
+            apiKey: this.getAttribute('api-key'),
+            authDomain: this.getAttribute('auth-domain'),
+            projectId: this.getAttribute('project-id'),
+            storageBucket: this.getAttribute('storage-bucket'),
+            messagingSenderId: this.getAttribute('sender-id'),
+            appId: this.getAttribute('app-id')
+        };
+        
+        // Store config globally for other tags to use
+        window.hxFirebaseConfig = config;
+        console.log("Firebase Extended Initialized");
+    }
+}
+customElements.define('firebase-app', FirebaseApp);
+
+// 2. Updated Auth Component
+class FireAuth extends HTMLElement {
+    connectedCallback() {
+        this.innerHTML = `
+            <div class="hx-wrapper">
+                <style>
+                    .hx-auth-container { text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+                    .hx-auth-btn { padding: 10px 20px; cursor: pointer; background: #DB4437; color: white; border: none; border-radius: 5px; font-weight: bold; }
+                </style>
+                <div class="hx-auth-container">
+                    <button class="hx-auth-btn">Sign in with Google</button>
+                    <p class="auth-status">Not signed in</p>
+                </div>
+            </div>
+        `;
+        applyUniversalStyles(this);
+    }
+}
+customElements.define('fire-auth', FireAuth);
+
+// 3. Updated Database Component
+class FireDatabase extends HTMLElement {
+    connectedCallback() {
+        const path = this.getAttribute('path') || 'root';
+        this.innerHTML = `
+            <div class="hx-wrapper">
+                <style>
+                    .hx-db-container { padding: 15px; border: 1px solid #eee; border-radius: 5px; background: #f9f9f9; width: 100%;}
+                </style>
+                <div class="hx-db-container">
+                    <strong>DB Path:</strong> <code>${path}</code>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        `;
+        applyUniversalStyles(this);
+    }
+}
+customElements.define('fire-db', FireDatabase);
+
+// 4. Hero Section Component
 class HeroSection extends HTMLElement {
     connectedCallback() {
         const bg = this.getAttribute('bg') || '';
@@ -10,118 +90,20 @@ class HeroSection extends HTMLElement {
 
         this.innerHTML = `
             <style>
-                .hero-container {
-                    background-image: url('${bg}');
-                    background-size: cover;
-                    background-position: center;
-                    padding: 100px 20px;
-                    text-align: center;
-                    color: white;
-                    border-radius: 10px;
-                    margin-bottom: 20px;
-                    font-family: sans-serif;
-                }
-                .hero-title {
-                    font-size: 3em;
-                    font-weight: bold;
-                    margin: 0 0 10px 0;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-                }
-                .hero-subtitle {
-                    font-size: 1.2em;
-                    margin: 0;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-                    font-weight: normal;
+                .hx-hero {
+                    background-image: url('${bg}'); background-size: cover; background-position: center;
+                    padding: 100px 20px; text-align: center; border-radius: 10px;
+                    margin-bottom: 20px; font-family: sans-serif;
                 }
             </style>
-            <div class="hero-container">
-                <h1 class="hero-title">${title}</h1>
-                <p class="hero-subtitle">${subtitle}</p>
+            <div class="hx-wrapper hx-hero">
+                <div style="color: white;">
+                    <h1 style="margin:0 0 10px 0;">${title}</h1>
+                    <p style="margin:0;">${subtitle}</p>
+                </div>
             </div>
         `;
+        applyUniversalStyles(this);
     }
 }
 customElements.define('hero-section', HeroSection);
-
-// 2. Search Bar Component
-class SearchBar extends HTMLElement {
-    connectedCallback() {
-        const targetId = this.getAttribute('target');
-        this.innerHTML = `
-            <style>
-                .hx-search { padding: 10px; width: 100%; box-sizing: border-box; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
-            </style>
-            <input type="text" class="hx-search" placeholder="Search list...">
-        `;
-        
-        this.querySelector('input').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const targetList = document.getElementById(targetId);
-            if (!targetList) return;
-            
-            targetList.querySelectorAll('li').forEach(item => {
-                item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none';
-            });
-        });
-    }
-}
-customElements.define('search-bar', SearchBar);
-
-// 3. Toggle Box Component
-class ToggleBox extends HTMLElement {
-    connectedCallback() {
-        const btnText = this.getAttribute('button-text') || 'Toggle';
-        const content = this.innerHTML;
-        this.innerHTML = `
-            <style>
-                .hx-toggle-btn { padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
-                .hx-content { display: none; margin-top: 10px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
-            </style>
-            <button class="hx-toggle-btn">${btnText}</button>
-            <div class="hx-content">${content}</div>
-        `;
-
-        this.querySelector('.hx-toggle-btn').addEventListener('click', () => {
-            const contentDiv = this.querySelector('.hx-content');
-            contentDiv.style.display = contentDiv.style.display === 'block' ? 'none' : 'block';
-        });
-    }
-}
-customElements.define('toggle-box', ToggleBox);
-
-// 4. Data Fetcher Component
-class DataFetcher extends HTMLElement {
-    connectedCallback() {
-        const src = this.getAttribute('src');
-        this.innerHTML = '<p>Loading data...</p>';
-        
-        fetch(src)
-            .then(response => response.json())
-            .then(data => {
-                this.innerHTML = `<pre style="background: #eee; padding: 10px; border-radius: 5px;">${JSON.stringify(data, null, 2)}</pre>`;
-            })
-            .catch(err => {
-                this.innerHTML = `<p style="color:red;">Error loading data</p>`;
-            });
-    }
-}
-customElements.define('data-fetcher', DataFetcher);
-
-// 5. Theme Switcher Component
-class ThemeSwitcher extends HTMLElement {
-    connectedCallback() {
-        this.innerHTML = `
-            <style>
-                .hx-theme-btn { padding: 10px 15px; cursor: pointer; background-color: #333; color: white; border: none; border-radius: 5px; }
-                body.dark-mode { background-color: #222; color: white; }
-                body.dark-mode .hx-content { background: #444; color: white; }
-            </style>
-            <button class="hx-theme-btn">Toggle Dark Mode</button>
-        `;
-        
-        this.querySelector('button').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-        });
-    }
-}
-customElements.define('theme-switcher', ThemeSwitcher);
