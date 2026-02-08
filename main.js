@@ -1,126 +1,126 @@
-// ==========================================
-// FINAL COMPONENTS.JS WITH THEME SWITCHER
-// ==========================================
+// HTML Extended - Main Library
+// v1.1 - Added Hero and Theme Features
 
-// 1. DYNAMIC SEARCH BAR
+// 1. Hero Section Component
+class HeroSection extends HTMLElement {
+    connectedCallback() {
+        const bg = this.getAttribute('bg') || '';
+        const title = this.getAttribute('title') || '';
+        const subtitle = this.getAttribute('subtitle') || '';
+
+        this.innerHTML = `
+            <style>
+                .hero-container {
+                    background-image: url('${bg}');
+                    background-size: cover;
+                    background-position: center;
+                    padding: 100px 20px;
+                    text-align: center;
+                    color: white;
+                    border-radius: 10px;
+                    margin-bottom: 20px;
+                    font-family: sans-serif;
+                }
+                .hero-title {
+                    font-size: 3em;
+                    font-weight: bold;
+                    margin: 0 0 10px 0;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                }
+                .hero-subtitle {
+                    font-size: 1.2em;
+                    margin: 0;
+                    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+                    font-weight: normal;
+                }
+            </style>
+            <div class="hero-container">
+                <h1 class="hero-title">${title}</h1>
+                <p class="hero-subtitle">${subtitle}</p>
+            </div>
+        `;
+    }
+}
+customElements.define('hero-section', HeroSection);
+
+// 2. Search Bar Component
 class SearchBar extends HTMLElement {
     connectedCallback() {
-        const placeholder = this.getAttribute('placeholder') || 'Search...';
-        this.innerHTML = `<input type="text" placeholder="${placeholder}" style="padding:8px; width:200px; border:1px solid #ccc; border-radius:4px;">`;
+        const targetId = this.getAttribute('target');
+        this.innerHTML = `
+            <style>
+                .hx-search { padding: 10px; width: 100%; box-sizing: border-box; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
+            </style>
+            <input type="text" class="hx-search" placeholder="Search list...">
+        `;
         
         this.querySelector('input').addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            const list = document.getElementById(this.getAttribute('target'));
-            if (!list) return;
+            const term = e.target.value.toLowerCase();
+            const targetList = document.getElementById(targetId);
+            if (!targetList) return;
             
-            [...list.children].forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(query) ? '' : 'none';
+            targetList.querySelectorAll('li').forEach(item => {
+                item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none';
             });
         });
     }
 }
 customElements.define('search-bar', SearchBar);
 
-// 2. TOGGLE SHOW/HIDE
+// 3. Toggle Box Component
 class ToggleBox extends HTMLElement {
     connectedCallback() {
-        const title = this.getAttribute('title');
-        // Define colors here based on a custom property (for theme switcher)
+        const btnText = this.getAttribute('button-text') || 'Toggle';
+        const content = this.innerHTML;
         this.innerHTML = `
-            <button style="padding:8px 12px; cursor:pointer; background:var(--primary-color, #007bff); color:white; border:none; border-radius:4px;">${title}</button>
-            <div class="content" style="display:none; padding:10px; border:1px solid #eee; margin-top:5px; border-radius:4px; transition: all 0.3s ease;">
-                ${this.innerHTML}
-            </div>
+            <style>
+                .hx-toggle-btn { padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+                .hx-content { display: none; margin-top: 10px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
+            </style>
+            <button class="hx-toggle-btn">${btnText}</button>
+            <div class="hx-content">${content}</div>
         `;
-        
-        this.querySelector('button').addEventListener('click', (e) => {
-            const content = this.querySelector('.content');
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                setTimeout(() => content.style.opacity = '1', 10);
-            } else {
-                content.style.opacity = '0';
-                setTimeout(() => content.style.display = 'none', 300);
-            }
+
+        this.querySelector('.hx-toggle-btn').addEventListener('click', () => {
+            const contentDiv = this.querySelector('.hx-content');
+            contentDiv.style.display = contentDiv.style.display === 'block' ? 'none' : 'block';
         });
-        this.querySelector('.content').style.opacity = '0';
     }
 }
 customElements.define('toggle-box', ToggleBox);
 
-// 3. SCROLL BUTTON
-class ScrollBtn extends HTMLElement {
-    connectedCallback() {
-        const targetId = this.getAttribute('target');
-        const speed = this.getAttribute('speed') || 'smooth';
-        this.innerHTML = `<button style="padding:8px 12px; cursor:pointer; border-radius:4px; background:var(--secondary-color, #f0f0f0);">${this.textContent}</button>`;
-        
-        this.querySelector('button').addEventListener('click', () => {
-            document.getElementById(targetId)?.scrollIntoView({ behavior: speed });
-        });
-    }
-}
-customElements.define('scroll-btn', ScrollBtn);
-
-// 4. DATA FETCHER
+// 4. Data Fetcher Component
 class DataFetcher extends HTMLElement {
-    async connectedCallback() {
-        const url = this.getAttribute('url');
-        const loadingMsg = this.getAttribute('loading') || 'Loading...';
+    connectedCallback() {
+        const src = this.getAttribute('src');
+        this.innerHTML = '<p>Loading data...</p>';
         
-        this.innerHTML = `<p style="font-style:italic;">${loadingMsg}</p>`;
-        
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            this.innerHTML = `<pre style="background:#f4f4f4; padding:15px; border-radius:4px; overflow-x:auto;">${JSON.stringify(data, null, 2)}</pre>`;
-        } catch (error) {
-            this.innerHTML = `<p style="color:red; font-weight:bold;">Error: Failed to fetch data.</p>`;
-        }
+        fetch(src)
+            .then(response => response.json())
+            .then(data => {
+                this.innerHTML = `<pre style="background: #eee; padding: 10px; border-radius: 5px;">${JSON.stringify(data, null, 2)}</pre>`;
+            })
+            .catch(err => {
+                this.innerHTML = `<p style="color:red;">Error loading data</p>`;
+            });
     }
 }
 customElements.define('data-fetcher', DataFetcher);
 
-// 5. VALIDATED FORM
-class ValidatedForm extends HTMLElement {
-    connectedCallback() {
-        const form = this.querySelector('form');
-        
-        form.addEventListener('submit', (e) => {
-            if (!form.checkValidity()) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                form.querySelectorAll(':invalid').forEach(input => {
-                    input.style.outline = '2px solid red';
-                    input.style.backgroundColor = '#fff8f8';
-                });
-            } else {
-                alert('Form is valid and ready!');
-            }
-        });
-    }
-}
-customElements.define('validated-form', ValidatedForm);
-
-// 6. THEME SWITCHER: <theme-switcher></theme-switcher>
+// 5. Theme Switcher Component
 class ThemeSwitcher extends HTMLElement {
     connectedCallback() {
-        this.innerHTML = `<button style="padding:8px; cursor:pointer;">Toggle Theme</button>`;
+        this.innerHTML = `
+            <style>
+                .hx-theme-btn { padding: 10px 15px; cursor: pointer; background-color: #333; color: white; border: none; border-radius: 5px; }
+                body.dark-mode { background-color: #222; color: white; }
+                body.dark-mode .hx-content { background: #444; color: white; }
+            </style>
+            <button class="hx-theme-btn">Toggle Dark Mode</button>
+        `;
         
         this.querySelector('button').addEventListener('click', () => {
-            const body = document.body;
-            if (body.style.backgroundColor === 'black') {
-                body.style.backgroundColor = 'white';
-                body.style.color = 'black';
-                // Set CSS variables for other components
-                document.documentElement.style.setProperty('--primary-color', '#007bff');
-            } else {
-                body.style.backgroundColor = 'black';
-                body.style.color = 'white';
-                document.documentElement.style.setProperty('--primary-color', '#555');
-            }
+            document.body.classList.toggle('dark-mode');
         });
     }
 }
